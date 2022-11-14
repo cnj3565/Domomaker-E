@@ -2,6 +2,23 @@ const models = require('../models');
 
 const { Account } = models;
 
+const premiumPage = (req, res) => {
+  res.render('premium', {csrfToken: req.csrfToken() });
+};
+
+const premiumToggle = async (req, res) => {
+  const premium = `${req.body.premium}`;
+
+  try {
+    req.session.Account.premium = premium;
+    return res.status(201).json({ message: 'Premium status updated.' });
+  } catch (err) {
+    console.log(err);
+
+    return res.status(400).json({ error: 'An error occured.' });
+  }
+};
+
 const loginPage = (req, res) => {
   res.render('login', { csrfToken: req.csrfToken() });
 };
@@ -34,6 +51,7 @@ const signup = async (req, res) => {
   const username = `${req.body.username}`;
   const pass = `${req.body.pass}`;
   const pass2 = `${req.body.pass2}`;
+  const premium = false;
 
   if (!username || !pass || !pass2) {
     return res.status(400).json({ error: 'All fields are required!' });
@@ -45,7 +63,7 @@ const signup = async (req, res) => {
 
   try {
     const hash = await Account.generateHash(pass);
-    const newAccount = new Account({ username, password: hash });
+    const newAccount = new Account({ username, password: hash, premium });
     await newAccount.save();
     req.session.account = Account.toAPI(newAccount);
     return res.json({ redirect: '/maker' });
@@ -66,4 +84,6 @@ module.exports = {
   logout,
   signup,
   getToken,
+  premiumPage,
+  premiumToggle,
 };
